@@ -9,7 +9,7 @@
     <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g2-3.5.11/dist/g2.min.js"></script>
     <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.data-set-0.10.2/dist/data-set.min.js"></script>
     <script>
-    fetch('{% url 'maps:area' 320100 %}')
+    fetch('{% url 'maps:hot_areas' %}')
     .then(res => res.json())
     .then(GeoJSON => {
       const userData = [];
@@ -31,7 +31,7 @@
       const chart = new G2.Chart({
         container: 'container',
         forceFit: true,
-        height: 800,
+        // height: 500,
         padding: 0
       });
       chart.scale({

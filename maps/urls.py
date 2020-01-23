@@ -7,5 +7,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('demo/', views.demo, name='demo'),
     path('<int:c>/', views.area, name='area'),
-    path('areas/<int:c1>/<int:c2>/', views.areas, name='areas'),
+    path('hot_areas/', views.hot_areas, name='hot_areas'),
 ]

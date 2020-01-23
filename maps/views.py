@@ -31,25 +31,28 @@ def area(request, c):
     return _return_jsonp_response(obj)
 
 
-def areas(request, c1, c2):
+def hot_areas(request):
     try:
-        area1 = GeoArea.objects.get(code=c1)
-        area2 = GeoArea.objects.get(code=c2)
-        filename1 = _geojson_filename(area1.level, c1)
-        filename2 = _geojson_filename(area2.level, c2)
-
-        obj1 = _load_jsonfile(filename1)
-        obj2 = _load_jsonfile(filename2)
-        obj1['features'] = obj1['features'] + obj2['features']
+        areas = GeoArea.objects.filter(is_hot=1)
+        rt = None
+        for area in areas:
+            print(area.name, area.level, area.code)
+            filename = _geojson_filename(area.level, area.code)
+            obj = _load_jsonfile(filename)
+            if rt is None:
+                rt = obj
+            else:
+                rt['features'] = rt['features'] + obj['features']
     except GeoArea.DoesNotExist:
-        raise Http404("Area with code %s cannot be found." % c)
+        raise Http404("Area with code %s cannot be found." % c1)
     except:
-        raise Http404("Area with code %s JSON file cannot be found" % c)
+        raise Http404("Area with code %s JSON file cannot be found" % c1)
 
-    return _return_jsonp_response(obj1)
+    return _return_jsonp_response(rt)
 
 
 def _geojson_filename(level, code):
+    code = int(code)
     base_dir = os.path.dirname(os.path.abspath(__file__))
     if level == 1:
         filename = base_dir + "/china-cities/datas/%d.json" % code
