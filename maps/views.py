@@ -36,7 +36,6 @@ def hot_areas(request):
         areas = GeoArea.objects.filter(is_hot=1)
         rt = None
         for area in areas:
-            print(area.name, area.level, area.code)
             filename = _geojson_filename(area.level, area.code)
             obj = _load_jsonfile(filename)
             if rt is None:
