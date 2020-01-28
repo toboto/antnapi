@@ -18,6 +18,10 @@ def demo(request):
     return render(request, 'maps/demo.html')
 
 
+def baidumap(request):
+    return render(request, 'maps/baidumap.html')
+
+
 def area(request, c):
     try:
         area = GeoArea.objects.get(code=c)
@@ -33,7 +37,7 @@ def area(request, c):
 
 def hot_areas(request):
     try:
-        areas = GeoArea.objects.filter(is_hot=1)
+        areas = GeoArea.objects.filter(is_hot=1)[0:1]
         rt = None
         for area in areas:
             filename = _geojson_filename(area.level, area.code)
@@ -43,9 +47,9 @@ def hot_areas(request):
             else:
                 rt['features'] = rt['features'] + obj['features']
     except GeoArea.DoesNotExist:
-        raise Http404("Area with code %s cannot be found." % c1)
-    except:
-        raise Http404("Area with code %s JSON file cannot be found" % c1)
+        raise Http404("Hot areas cannot be found.")
+    except Exception as e:
+        raise Http404("Hot areas JSON file cannot be found")
 
     return _return_jsonp_response(rt)
 
@@ -65,7 +69,7 @@ def _geojson_filename(level, code):
 
 
 def _load_jsonfile(filename):
-    f = open(filename)
+    f = open(filename, encoding='utf-8')
     jsonstr = f.read()
     jsonstr = jsonstr.replace("\ufeff", "")
     f.close()

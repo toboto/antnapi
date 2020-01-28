@@ -40,7 +40,12 @@
       });
       chart.legend(false);
       chart.axis(false);
-      chart.tooltip(false);
+      // chart.tooltip(false);
+      chart.tooltip(true, {
+        title: 'my title',
+        showTitle: true,
+        inPlot: false,
+      });
 
       const geoView = chart.view();
       geoView.source(geoDv);
@@ -61,6 +66,8 @@
           blur: 500 / 15
         });
       chart.render();
+      window.chart = chart;
+      window.userData = userData;
     });
     </script>
   </body>
