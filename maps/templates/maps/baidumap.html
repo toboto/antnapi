@@ -7,7 +7,9 @@
 		body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	</style>
 	<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=m0NRG9APeKtIu5X85CSYZdI6"></script>
-	<title>添加行政区划</title>
+	<script type="text/javascript" src="//code.jquery.com/jquery-3.4.1.min.js"></script>
+	<script type="text/javascript" src="http://api.map.baidu.com/library/GeoUtils/1.2/src/GeoUtils_min.js"></script>
+	<title>长三角地区水文数据</title>
 </head>
 <body>
 	<div id="allmap"></div>
@@ -16,104 +18,118 @@
 <script type="text/javascript">
 	// 百度地图API功能
 	var map = new BMap.Map("allmap", {mapType: BMAP_HYBRID_MAP});
+	var navCtrl = new BMap.NavigationControl();
+	map.addControl(navCtrl);
 	map.centerAndZoom(new BMap.Point(116.403765, 39.914850), 8);
 	map.enableScrollWheelZoom();
-
-	function getBoundary(){
+	var geoc = new BMap.Geocoder();
+	var polygons = [];
+	$.ajax({
+      url: "http://localhost:8000/maps/hot_area_names",
+      type: "GET",
+      crossDomain: true,
+      dataType: "json",
+      success: function(data) {
 		var bdary = new BMap.Boundary();
 		map.clearOverlays();        //清除地图覆盖物
         var pointArray = [];
-		bdary.get("上海市", function(rs){       //获取行政区域
-			var count = rs.boundaries.length; //行政区域的点有多少个
-			if (count === 0) {
-				alert('未能获取当前输入行政区域');
-				return ;
-			}
-			for (var i = 0; i < count; i++) {
-				var ply = new BMap.Polygon(rs.boundaries[i], {strokeWeight: 2, strokeColor: "#ff0000", fillColor: ""}); //建立多边形覆盖物
-				map.addOverlay(ply);  //添加覆盖物
-				pointArray = pointArray.concat(ply.getPath());
-			}
-			map.setViewport(pointArray);    //调整视野
-			// addlabel();
-		});
-		bdary.get("常州市", function(rs){       //获取行政区域
-			var count = rs.boundaries.length; //行政区域的点有多少个
-			if (count === 0) {
-				alert('未能获取当前输入行政区域');
-				return ;
-			}
-			for (var i = 0; i < count; i++) {
-				var ply = new BMap.Polygon(rs.boundaries[i], {strokeWeight: 2, strokeColor: "#ff0000", fillColor: ""}); //建立多边形覆盖物
-				map.addOverlay(ply);  //添加覆盖物
-				pointArray = pointArray.concat(ply.getPath());
-			}
-			map.setViewport(pointArray);    //调整视野
-			// addlabel();
-		});
-		bdary.get("苏州市", function(rs){       //获取行政区域
-			var count = rs.boundaries.length; //行政区域的点有多少个
-			if (count === 0) {
-				alert('未能获取当前输入行政区域');
-				return ;
-			}
-			for (var i = 0; i < count; i++) {
-				var ply = new BMap.Polygon(rs.boundaries[i], {strokeWeight: 2, strokeColor: "#ff0000", fillColor: ""}); //建立多边形覆盖物
-				map.addOverlay(ply);  //添加覆盖物
-				pointArray = pointArray.concat(ply.getPath());
-			}
-			map.setViewport(pointArray);    //调整视野
-			// addlabel();
-		});
-		bdary.get("无锡市", function(rs){       //获取行政区域
-			var count = rs.boundaries.length; //行政区域的点有多少个
-			if (count === 0) {
-				alert('未能获取当前输入行政区域');
-				return ;
-			}
-			for (var i = 0; i < count; i++) {
-				var ply = new BMap.Polygon(rs.boundaries[i], {strokeWeight: 2, strokeColor: "#ff0000", fillColor: ""}); //建立多边形覆盖物
-				map.addOverlay(ply);  //添加覆盖物
-				pointArray = pointArray.concat(ply.getPath());
-			}
-			map.setViewport(pointArray);    //调整视野
-			// addlabel();
-		});
-	}
+      	var cities = data.cities;
+      	var cityCnt = cities.length;
+      	var cityRendered = 0;
+      	for (var c in cities) {
+      		var city = cities[c];
+            console.log(city.name);
+            console.log(city.location);
+            var mouseoverTxt = city.name + "水域：" + parseInt(Math.random() * 1000,10);
+		    var myCompOverlay = new ComplexCustomOverlay(
+		    	new BMap.Point(city.location.latitude, city.location.longitude),
+		    	city.name, mouseoverTxt
+		    );
 
-	getBoundary();
-	function showInfo(e){
-		console.log(e.point.lng + ", " + e.point.lat);
-	}
-	map.addEventListener("click", showInfo);
+            map.addOverlay(myCompOverlay);
+      		bdary.get(city.name, function(rs) {
+      			var count = rs.boundaries.length;
+      			if (count === 0) {
+                    alert('未能获取当前输入行政区域');
+                    return;
+      			}
+      			var onOverFlag = false;
+                for (var i = 0; i < count; i++) {
+                    var ply = new BMap.Polygon(
+                        rs.boundaries[i],
+                        {strokeWeight: 1, strokeColor: "#ff0000", fillColor: ""}
+                    ); //建立多边形覆盖物
+                    map.addOverlay(ply);  //添加覆盖物
+                    polygons.push(ply);
+                    pointArray = pointArray.concat(ply.getPath());
+                }
+                cityRendered++;
+                if (cityRendered >= cityCnt) {
+                    map.setViewport(pointArray);    //调整视野
+                }
+      		})
+      	}
+      }
+    });
 
-	function ComplexCustomOverlay(point, text, mouseoverText){
+	var mousemoveHandler = null;
+    map.addEventListener('mousemove', function(e) {
+        console.log(e.point);
+        clearTimeout(mousemoveHandler);
+        var pt = e.point;
+        mousemoveHander = setTimeout(function() {
+        	var needClear = true;
+        	for (var p in polygons) {
+        		var ply = polygons[p];
+        		if (BMapLib.GeoUtils.isPointInPolygon(pt, ply)) {
+        			needClear = false;
+                    geoc.getLocation(pt, function(rs){
+                        var addComp = rs.addressComponents;
+                        $(".complex_custom_overlay").hide();
+                        $("#show" + addComp.city).show();
+                    });
+        		}
+        	}
+        	if (needClear) {
+                $(".complex_custom_overlay").hide();
+        	}
+        }, 200);
+    });
+
+
+	function ComplexCustomOverlay(point, city, mouseoverText){
       this._point = point;
-      this._text = text;
+      this._city = city;
       this._overText = mouseoverText;
     }
     ComplexCustomOverlay.prototype = new BMap.Overlay();
     ComplexCustomOverlay.prototype.initialize = function(map){
       this._map = map;
       var div = this._div = document.createElement("div");
+      div.id = "show" + this._city;
+      div.className = "complex_custom_overlay";
+      console.log(div.id);
       div.style.position = "absolute";
       div.style.zIndex = BMap.Overlay.getZIndex(this._point.lat);
-      div.style.backgroundColor = "#EE5D5B";
-      div.style.border = "1px solid #BC3B3A";
+      // div.style.backgroundColor = "#EE5D5B"; // red
+      div.style.backgroundColor = "#6BADCA";
+      // div.style.border = "1px solid #BC3B3A"; // red
+      div.style.border = "1px solid #0000FF";
       div.style.color = "white";
       div.style.height = "18px";
       div.style.padding = "2px";
       div.style.lineHeight = "18px";
       div.style.whiteSpace = "nowrap";
       div.style.MozUserSelect = "none";
-      div.style.fontSize = "12px"
+      div.style.fontSize = "12px";
+      div.style.display = '';
       var span = this._span = document.createElement("span");
       div.appendChild(span);
-      span.appendChild(document.createTextNode(this._text));
+      span.appendChild(document.createTextNode(this._overText));
       var that = this;
 
       var arrow = this._arrow = document.createElement("div");
-      arrow.style.background = "url(//map.baidu.com/fwmap/upload/r/map/fwmap/static/house/images/label.png) no-repeat";
+      arrow.style.background = "url(//map.baidu.com/fwmap/upload/r/map/fwmap/static/house/images/label.png) 0 -20px no-repeat";
       arrow.style.position = "absolute";
       arrow.style.width = "11px";
       arrow.style.height = "10px";
@@ -121,20 +137,6 @@
       arrow.style.left = "10px";
       arrow.style.overflow = "hidden";
       div.appendChild(arrow);
-
-      div.onmouseover = function(){
-        this.style.backgroundColor = "#6BADCA";
-        this.style.borderColor = "#0000ff";
-        this.getElementsByTagName("span")[0].innerHTML = that._overText;
-        arrow.style.backgroundPosition = "0px -20px";
-      }
-
-      div.onmouseout = function(){
-        this.style.backgroundColor = "#EE5D5B";
-        this.style.borderColor = "#BC3B3A";
-        this.getElementsByTagName("span")[0].innerHTML = that._text;
-        arrow.style.backgroundPosition = "0px 0px";
-      }
 
       map.getPanes().labelPane.appendChild(div);
 
@@ -145,17 +147,7 @@
       var pixel = map.pointToOverlayPixel(this._point);
       this._div.style.left = pixel.x - parseInt(this._arrow.style.left) + "px";
       this._div.style.top  = pixel.y - 30 + "px";
+      this._div.style.display = 'none';
     }
-    var txt = "上海", mouseoverTxt = txt + "水域：" + parseInt(Math.random() * 1000,10);
-
-    var myCompOverlay = new ComplexCustomOverlay(new BMap.Point(121.472176, 31.096183), txt, mouseoverTxt);
-
-    map.addOverlay(myCompOverlay);
-
-    txt = "苏州", mouseoverTxt = txt + "水域：" + parseInt(Math.random() * 1000,10);
-
-    var myCompOverlay2 = new ComplexCustomOverlay(new BMap.Point(120.543113, 31.293879), txt, mouseoverTxt);
-
-    map.addOverlay(myCompOverlay2);
 
 </script>

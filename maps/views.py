@@ -37,7 +37,7 @@ def area(request, c):
 
 def hot_areas(request):
     try:
-        areas = GeoArea.objects.filter(is_hot=1)[0:1]
+        areas = GeoArea.objects.filter(is_hot=1)
         rt = None
         for area in areas:
             filename = _geojson_filename(area.level, area.code)
@@ -50,6 +50,23 @@ def hot_areas(request):
         raise Http404("Hot areas cannot be found.")
     except Exception as e:
         raise Http404("Hot areas JSON file cannot be found")
+
+    return _return_jsonp_response(rt)
+
+
+def hot_area_names(request):
+    try:
+        areas = GeoArea.objects.filter(is_hot=1)
+        rt = {'cities': []}
+        for area in areas:
+            city = {'name': area.name}
+            city['location'] = {
+                'latitude': area.cp_latitude,
+                'longitude': area.cp_longitude,
+            }
+            rt['cities'].append(city)
+    except Exception as e:
+        raise Http404("Hot areas cannot be found")
 
     return _return_jsonp_response(rt)
 
