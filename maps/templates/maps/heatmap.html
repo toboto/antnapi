@@ -4,7 +4,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 	<style type="text/css">
-		body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+		body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
 	</style>
 	<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=m0NRG9APeKtIu5X85CSYZdI6"></script>
     <script type="text/javascript" src="//api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
@@ -78,6 +78,12 @@
         map.addOverlay(heatmapOverlay);
         heatmapOverlay.setDataSet({data: heatmapData, max: 100});
         heatmapOverlay.show();
+        setInterval(function() {
+        	for (var i in heatmapData) {
+        		heatmapData[i].count = Math.floor(Math.random() * 100);
+        	}
+            heatmapOverlay.setDataSet({data: heatmapData, max: 100});
+        }, 1000);
     }, 3000);
 
     function setGradient(){

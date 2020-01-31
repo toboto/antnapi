@@ -42,7 +42,7 @@
             console.log(city.location);
             var mouseoverTxt = city.name + "水域：" + parseInt(Math.random() * 1000,10);
 		    var myCompOverlay = new ComplexCustomOverlay(
-		    	new BMap.Point(city.location.latitude, city.location.longitude),
+		    	new BMap.Point(city.location.longitude, city.location.latitude),
 		    	city.name, mouseoverTxt
 		    );
 
