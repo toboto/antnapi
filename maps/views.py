@@ -10,6 +10,11 @@ from .models import GeoArea
 # Create your views here.
 
 
+# TODO: delte this demo function
+def show_git_to_wuziyi(reques):
+    raise Http404("no page here")
+
+
 def index(request):
     return HttpResponse("nothing is finished")
 
@@ -20,6 +25,10 @@ def demo(request):
 
 def baidumap(request):
     return render(request, 'maps/baidumap.html')
+
+
+def heatmap(request):
+    return render(request, 'maps/heatmap.html')
 
 
 def area(request, c):

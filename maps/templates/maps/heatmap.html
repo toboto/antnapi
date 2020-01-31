@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+		body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+	</style>
+	<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=m0NRG9APeKtIu5X85CSYZdI6"></script>
+    <script type="text/javascript" src="//api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+	<script type="text/javascript" src="//code.jquery.com/jquery-3.4.1.min.js"></script>
+	<title>长三角地区水文数据</title>
+</head>
+<body>
+	<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+	// 百度地图API功能
+	var map = new BMap.Map("allmap");// , {mapType: BMAP_HYBRID_MAP});
+	var navCtrl = new BMap.NavigationControl();
+	map.addControl(navCtrl);
+	map.centerAndZoom(new BMap.Point(116.403765, 39.914850), 8);
+	map.enableScrollWheelZoom();
+	var geoc = new BMap.Geocoder();
+	var polygons = [];
+    var heatmapData = [];
+	$.ajax({
+      url: "http://localhost:8000/maps/hot_area_names",
+      type: "GET",
+      crossDomain: true,
+      dataType: "json",
+      success: function(data) {
+		var bdary = new BMap.Boundary();
+		map.clearOverlays();        //清除地图覆盖物
+        var pointArray = [];
+      	var cities = data.cities;
+      	var cityCnt = cities.length;
+      	var cityRendered = 0;
+      	for (var c in cities) {
+      		var city = cities[c];
+            console.log(city.name);
+            console.log(city.location);
+            var mouseoverTxt = city.name + "水域：" + parseInt(Math.random() * 1000,10);
+            heatmapData.push({
+            	lng: city.location.longitude,
+            	lat: city.location.latitude,
+            	count: Math.floor(Math.random() * 100),
+            });
+
+      		bdary.get(city.name, function(rs) {
+      			var count = rs.boundaries.length;
+      			if (count === 0) {
+                    alert('未能获取当前输入行政区域');
+                    return;
+      			}
+      			var onOverFlag = false;
+                for (var i = 0; i < count; i++) {
+                    var ply = new BMap.Polygon(
+                        rs.boundaries[i],
+                        {strokeWeight: 1, strokeColor: "#ff0000", fillColor: ""}
+                    ); //建立多边形覆盖物
+                    map.addOverlay(ply);  //添加覆盖物
+                    polygons.push(ply);
+                    pointArray = pointArray.concat(ply.getPath());
+                }
+                cityRendered++;
+                if (cityRendered >= cityCnt) {
+                    map.setViewport(pointArray);    //调整视野
+                }
+      		})
+      	}
+      }
+    });
+
+    setTimeout(function() {
+        heatmapOverlay = new BMapLib.HeatmapOverlay({radius: 20});
+        map.addOverlay(heatmapOverlay);
+        heatmapOverlay.setDataSet({data: heatmapData, max: 100});
+        heatmapOverlay.show();
+    }, 3000);
+
+    function setGradient(){
+     	/*格式如下所示:
+		{
+	  		0:'rgb(102, 255, 0)',
+	 	 	.5:'rgb(255, 170, 0)',
+		  	1:'rgb(255, 0, 0)'
+		}*/
+     	var gradient = {};
+     	var colors = document.querySelectorAll("input[type='color']");
+     	colors = [].slice.call(colors,0);
+     	colors.forEach(function(ele){
+			gradient[ele.getAttribute("data-key")] = ele.value;
+     	});
+        heatmapOverlay.setOptions({"gradient":gradient});
+    }
+	//判断浏览区是否支持canvas
+    function isSupportCanvas(){
+        var elem = document.createElement('canvas');
+        return !!(elem.getContext && elem.getContext('2d'));
+    }
+
+
+</script>
