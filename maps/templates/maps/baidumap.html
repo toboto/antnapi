@@ -17,7 +17,7 @@
 </html>
 <script type="text/javascript">
 	// 百度地图API功能
-	var map = new BMap.Map("allmap", {mapType: BMAP_HYBRID_MAP});
+	var map = new BMap.Map("allmap"); // , {mapType: BMAP_HYBRID_MAP});
 	var navCtrl = new BMap.NavigationControl();
 	map.addControl(navCtrl);
 	map.centerAndZoom(new BMap.Point(116.403765, 39.914850), 8);
@@ -65,7 +65,7 @@
                 }
                 cityRendered++;
                 if (cityRendered >= cityCnt) {
-                    map.setViewport(pointArray);    //调整视野
+                    map.setViewport(pointArray, {zoomFactor: 1});    //调整视野
                 }
       		})
       	}
@@ -74,7 +74,6 @@
 
 	var mousemoveHandler = null;
     map.addEventListener('mousemove', function(e) {
-        console.log(e.point);
         clearTimeout(mousemoveHandler);
         var pt = e.point;
         mousemoveHander = setTimeout(function() {
@@ -94,6 +93,10 @@
                 $(".complex_custom_overlay").hide();
         	}
         }, 200);
+    });
+
+    map.addEventListener('click', function(e) {
+        console.log(e.point);
     });
 
 

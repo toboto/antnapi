@@ -25,6 +25,10 @@ def heatmap(request):
     return render(request, 'maps/heatmap.html')
 
 
+def movemap(request):
+    return render(request, 'maps/movemap.html')
+
+
 def area(request, c):
     try:
         area = GeoArea.objects.get(code=c)

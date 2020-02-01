@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<title>添加弧线</title>
+	<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=m0NRG9APeKtIu5X85CSYZdI6"></script>
+	<script type="text/javascript" src="//api.map.baidu.com/library/CurveLine/1.5/src/CurveLine.min.js"></script>
+	<style type="text/css">
+		html,body{ width:100%; height:100%; margin:0; overflow:hidden; font-family:"微软雅黑"; }
+	</style>
+</head>
+<body>
+	<div style="width:100%;height:100%;border:1px solid gray" id="container"></div>
+</body>
+</html>
+<script type="text/javascript">
+	// 百度地图API功能
+	var map = new BMap.Map("container");
+	map.centerAndZoom(new BMap.Point(119.709471, 32.032915), 8);
+	map.enableScrollWheelZoom();
+
+    var linePoints = [
+        {lng: 118.610232, lat: 31.934908},
+        {lng: 118.716016, lat: 32.060337},
+        {lng: 118.831, lat: 32.134729},
+        {lng: 118.987377, lat: 32.17777},
+        {lng: 119.065565, lat: 32.22079},
+        {lng: 119.203545, lat: 32.23252},
+        {lng: 119.286333, lat: 32.197327},
+        {lng: 119.364521, lat: 32.209059},
+        {lng: 119.622083, lat: 32.193416},
+        {lng: 119.77846, lat: 32.302863},
+        {lng: 119.879646, lat: 32.26379},
+        {lng: 119.911841, lat: 32.122987},
+        {lng: 119.971632, lat: 32.036833},
+        {lng: 120.049821, lat: 31.974123},
+        {lng: 120.183201, lat: 31.927063},
+        {lng: 120.316581, lat: 31.958439},
+        {lng: 120.454561, lat: 32.017241},
+        {lng: 120.422366, lat: 31.997644},
+        {lng: 120.59714, lat: 32.040751},
+        {lng: 120.776514, lat: 31.997644},
+        {lng: 120.896096, lat: 31.848575},
+        {lng: 121.034076, lat: 31.781807},
+        {lng: 121.241045, lat: 31.703194},
+        {lng: 121.365227, lat: 31.56546},
+        {lng: 121.521604, lat: 31.510309},
+        {lng: 121.696379, lat: 31.459067},
+        ];
+	var mapPoints = [];
+	for (var i in linePoints) {
+		mapPoints.push(new BMap.Point(linePoints[i].lng, linePoints[i].lat));
+	}
+	var sy = new BMap.Symbol(BMap_Symbol_SHAPE_BACKWARD_OPEN_ARROW, {
+        scale: 0.6,//图标缩放大小
+        strokeColor:'#fff',//设置矢量图标的线填充颜色
+        strokeWeight: '2',//设置线宽
+    });
+    var icons = new BMap.IconSequence(sy, '10', '30');
+	// var curve = new BMapLib.CurveLine(mapPoints, {
+	var curve = new BMap.Polyline(mapPoints, {
+        strokeWeight: 8, strokeOpacity: 0.8, strokeColor:"#18a45b", icons: [icons]
+    }); //创建弧线对象
+	map.addOverlay(curve); //添加到地图中
+	var movePoints = curve.getPath();
+
+	BMap.Marker.prototype.moveto = function(to, duration) {
+		var step = 10;
+		var lng = (to.lng - this.point.lng) / step;
+		var lat = (to.lat - this.point.lat) / step;
+		var i = 1;
+		var _this = this;
+		var h = setInterval(function() {
+			var pt = new BMap.Point(_this.point.lng + lng, _this.point.lat + lat);
+			_this.setPosition(pt);
+			if (i < step) {
+				i++;
+			}
+			else {
+				clearInterval(h);
+				h = null;
+			}
+		}, duration / step);
+	}
+	var marker = new BMap.Marker(linePoints[0]);
+	var markerIndex = 0;
+
+	map.addOverlay(marker);
+	var movePeriod = 500;
+	var ih = setInterval(function() {
+		var point = movePoints[++markerIndex % movePoints.length];
+		if (movePeriod <= 100 || markerIndex % movePoints.length == 0) {
+			marker.setPosition(point);
+		}
+		else {
+            marker.moveto(point, movePeriod);
+		}
+	}, movePeriod);
+
+
+
+</script>
+</html>
